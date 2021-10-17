@@ -25,9 +25,9 @@ class FailureAdvice : AbstractMappingJacksonResponseBodyAdvice() {
             ?.mapLeft {
                 when (it) {
                     is Failure -> it
-                    else -> Failure(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to decode error")
+                    else -> Failure.INTERNAL_SERVER_ERROR
                 }
             }
-            ?.peekLeft { response.setStatusCode(it.httpStatus) }
+            ?.peekLeft { response.setStatusCode(it.status) }
     }
 }

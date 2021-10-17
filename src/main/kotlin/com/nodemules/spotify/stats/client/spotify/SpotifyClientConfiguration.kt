@@ -16,7 +16,7 @@ class SpotifyClientConfiguration(
     fun errorDecoder(objectMapper: ObjectMapper): ErrorDecoder = ErrorDecoder { _, response ->
         objectMapper
             .run { readValue(response.body().asInputStream(), SpotifyErrorResponse::class.java) }
-            .run { SpotifyClientException(HttpStatus.valueOf(response.status()), error.message ?: response.reason()) }
+            .run { SpotifyClientException(HttpStatus.valueOf(response.status()), error.message) }
     }
 
     @Bean

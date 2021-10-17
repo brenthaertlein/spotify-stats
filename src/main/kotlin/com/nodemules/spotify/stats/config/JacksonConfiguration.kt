@@ -25,11 +25,10 @@ class JacksonConfiguration {
         private val objectMapper = jacksonObjectMapper()
 
         private fun Any.toFailure() = when (this) {
-            is Failure -> this
-            is SpotifyErrorResponse -> this.error.run { Failure(HttpStatus.valueOf(status), message) }
+            is Failure -> this.copy()
             else -> run {
                 logger.error { "Unable to serialize $this" }
-                Failure(httpStatus = HttpStatus.INTERNAL_SERVER_ERROR, "Serialization error")
+                Failure.INTERNAL_SERVER_ERROR
             }
         }
 
@@ -51,12 +50,11 @@ class JacksonConfiguration {
         private var type: JavaType? = null
         private var leftType: JavaType? = null
 
-        override fun createContextual(ctxt: DeserializationContext, property: BeanProperty?): JsonDeserializer<*> {
-            return EitherDeserializer().apply {
+        override fun createContextual(ctxt: DeserializationContext, property: BeanProperty?): JsonDeserializer<*> =
+            EitherDeserializer().apply {
                 type = ctxt.contextualType.containedTypeOrUnknown(1)
                 leftType = ctxt.contextualType.containedTypeOrUnknown(0)
             }
-        }
 
         override fun deserializeObject(
             jsonParser: JsonParser,
@@ -67,7 +65,7 @@ class JacksonConfiguration {
             Try.of { codec.readValue<Any>(TreeTraversingParser(tree), type) }
                 .map { Either.right<Any, Any>(it) }
                 .getOrElseGet { Either.left(codec.readValue(TreeTraversingParser(tree), leftType)) }
-        } ?: Either.left<Failure, Any>(Failure(httpStatus = HttpStatus.INTERNAL_SERVER_ERROR, "Unable to deserialize"))
+        } ?: Either.left<Failure, Any>(Failure.INTERNAL_SERVER_ERROR)
 
     }
 }
