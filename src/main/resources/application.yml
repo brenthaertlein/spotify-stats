@@ -11,3 +11,6 @@ spring:
         provider:
           spotify:
             token-uri: https://accounts.spotify.com/api/token
+feign:
+  circuitbreaker:
+    enabled: true

@@ -1,5 +1,7 @@
 package com.nodemules.spotify.stats.client
 
+import io.vavr.control.Try
+import mu.KLogging
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.core.authority.AuthorityUtils
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest
@@ -15,9 +17,12 @@ class OAuth2Provider(
     fun getAccessToken(client: String): OAuth2AccessToken? = OAuth2AuthorizeRequest.withClientRegistrationId(client)
         .principal(ANONYMOUS_AUTHENTICATION)
         .build()
-        .let { oAuth2AuthorizedClientManager.authorize(it)?.accessToken }
+        .let { Try.of { oAuth2AuthorizedClientManager.authorize(it) } }
+        .map { it?.accessToken }
+        .onFailure { logger.error(it) { "Error doing OAuth2 stuff" } }
+        .orNull
 
-    companion object {
+    companion object : KLogging() {
 
         private val ANONYMOUS_AUTHENTICATION =
             AnonymousAuthenticationToken("key", "anonymous", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"))

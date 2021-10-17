@@ -33,10 +33,16 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
 
     implementation("org.springframework.data:spring-data-commons")
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    implementation("io.vavr:vavr:0.10.4")
+    implementation("io.vavr:vavr-kotlin:0.10.2")
+    implementation("io.vavr:vavr-jackson:0.10.3")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

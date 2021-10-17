@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/browse")
 class BrowseController(
-    @Qualifier("cacheableSpotifyBrowseClient") private val spotifyBrowseClient: SpotifyBrowseClient
+    private val spotifyBrowseClient: SpotifyBrowseClient
 ) {
 
     @GetMapping("/categories")

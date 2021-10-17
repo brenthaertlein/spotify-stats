@@ -15,3 +15,6 @@ spring:
             token-uri: https://accounts.spotify.com/api/token
   caching:
     time-to-live: ${SPRING_CACHING_TTL}
+feign:
+  circuitbreaker:
+    enabled: true
