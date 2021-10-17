@@ -6,5 +6,5 @@ import io.vavr.control.Either
 
 interface SpotifyTrackOperations {
 
-    fun getRandomTrack(category: String?, refresh: Boolean): Either<Failure, Track>
+    fun getRandomTrack(category: String?): Either<Failure, Track>
 }
