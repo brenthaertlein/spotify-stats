@@ -13,5 +13,8 @@ class TrackController(
 ) {
 
     @GetMapping("/recent/random")
-    fun getRandomTrack(@RequestParam(required = false) category: String? = null) = spotifyTrackService.getRandomTrack(category)
+    fun getRandomTrack(
+        @RequestParam(required = false) category: String? = null,
+        @RequestParam(required = false) refresh: Boolean = false
+    ) = spotifyTrackService.getRandomTrack(category, refresh)
 }

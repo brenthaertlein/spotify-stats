@@ -15,12 +15,14 @@ class SpotifyTrackService(
     private val cachingClient: StringCachingClient<Track>
 ) : SpotifyTrackOperations {
 
-    override fun getRandomTrack(category: String?): Either<Failure, Track> = cachingClient.random()
-        .fold({ getCompletelyRandomTrack() }) { Either.right(it) }
+    override fun getRandomTrack(category: String?, refresh: Boolean): Either<Failure, Track> =
+        run { refresh.takeIf { it }?.let { getCompletelyRandomTrack(category) } ?: cachingClient.random() }
+            .fold({ getCompletelyRandomTrack(refresh.takeUnless { it }.let { category }) }) { Either.right(it) }
 
-    private fun getCompletelyRandomTrack() = getRandomPlaylist()
-        .flatMap { playlist -> spotifyPlaylistService.getPlaylistTracks(playlist.id).mapLeft { it.copy() } }
-        .flatMap { tracks -> tracks.sample().toEither { FAILURE_NOT_FOUND } }
+    private fun getCompletelyRandomTrack(category: String? = null) =
+        run { category?.let { getRandomPlaylist(category) } ?: getRandomPlaylist() }
+            .flatMap { playlist -> spotifyPlaylistService.getPlaylistTracks(playlist.id).mapLeft { it.copy() } }
+            .flatMap { tracks -> tracks.sample().toEither { FAILURE_NOT_FOUND } }
 
     private fun getRandomPlaylist() = spotifyBrowseService.getCategories()
         .flatMap { it.sample().toEither { FAILURE_NOT_FOUND } }
