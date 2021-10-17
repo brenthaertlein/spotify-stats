@@ -23,15 +23,28 @@ configure<DependencyManagementExtension> {
 }
 
 dependencies {
+    implementation("org.springframework:spring-context")
+    implementation("org.springframework:spring-context-support")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+
+    implementation("org.springframework.data:spring-data-commons")
+
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
     implementation("io.github.microutils:kotlin-logging:1.12.5")
+
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.4")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
