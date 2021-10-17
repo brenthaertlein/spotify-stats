@@ -8,5 +8,6 @@ import io.vavr.control.Either
 interface SpotifyBrowseOperations {
 
     fun getCategories(): Either<Failure, List<Category>>
-    fun getCategoryPlaylists(id: String): Either<Failure, CategoryPlaylistsResponse>?
+
+    fun getCategoryPlaylists(id: String): Either<Failure, CategoryPlaylistsResponse>
 }

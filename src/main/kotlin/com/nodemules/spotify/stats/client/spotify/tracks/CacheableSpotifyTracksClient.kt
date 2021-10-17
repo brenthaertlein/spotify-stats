@@ -5,6 +5,7 @@ import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.Failure.GenericFailure
 import com.nodemules.spotify.stats.client.StringCachingClient
 import com.nodemules.spotify.stats.client.spotify.Track
+import com.nodemules.spotify.stats.sample
 import io.vavr.control.Either
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CacheConfig
@@ -27,7 +28,7 @@ class CacheableSpotifyTracksClient(
 
     override fun random(): Either<Failure, Track> = cacheManager.getCache("spotify.tracks")
         ?.run { nativeCache as Cache<*, *> }
-        ?.run { asMap().values.find { true } }
+        ?.run { asMap().values.sample() }
         ?.run { this as Either<*, *> }
         ?.run { orNull as Track }
         ?.let { Either.right(it) }
