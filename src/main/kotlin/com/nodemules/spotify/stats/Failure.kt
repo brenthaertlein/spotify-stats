@@ -8,15 +8,11 @@ interface Failure {
     val statusCode: Int
         get() = status.value()
 
-    fun copy() = object : Failure {
-        override val status: HttpStatus = this@Failure.status
-        override val message: String = this@Failure.message
-    }
+    fun copy() = GenericFailure(status, message)
+
+    data class GenericFailure(override val status: HttpStatus, override val message: String) : Failure
 
     companion object {
-        val INTERNAL_SERVER_ERROR: Failure = object : Failure {
-            override val status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR
-            override val message: String = "Shit broke"
-        }
+        val INTERNAL_SERVER_ERROR: Failure = GenericFailure(HttpStatus.INTERNAL_SERVER_ERROR, "Shit broke")
     }
 }

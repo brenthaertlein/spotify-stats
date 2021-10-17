@@ -10,6 +10,8 @@ import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.servlet.mvc.method.annotation.AbstractMappingJacksonResponseBodyAdvice
+import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
 @ControllerAdvice
 class FailureAdvice : AbstractMappingJacksonResponseBodyAdvice() {
@@ -20,14 +22,12 @@ class FailureAdvice : AbstractMappingJacksonResponseBodyAdvice() {
         request: ServerHttpRequest,
         response: ServerHttpResponse
     ) {
-        bodyContainer.value.takeIf { it is Either<*, *> }
-            ?.let { it as Either<*, *> }
-            ?.mapLeft {
-                when (it) {
-                    is Failure -> it
-                    else -> Failure.INTERNAL_SERVER_ERROR
-                }
-            }
+        bodyContainer.value.takeAs(Either::class)
+            ?.mapLeft { it.takeAs(Failure::class) ?: Failure.INTERNAL_SERVER_ERROR }
             ?.peekLeft { response.setStatusCode(it.status) }
+    }
+
+    companion object {
+        private fun <T : Any> Any.takeAs(kClass: KClass<T>): T? = this.takeIf { kClass.isInstance(it) }?.let { kClass.cast(it) }
     }
 }
