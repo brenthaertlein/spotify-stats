@@ -1,5 +1,6 @@
-package com.nodemules.spotify.stats.client.spotify
+package com.nodemules.spotify.stats.client.spotify.browse
 
+import com.nodemules.spotify.stats.client.spotify.*
 import io.vavr.control.Either
 import mu.KLogging
 import org.springframework.cloud.openfeign.FallbackFactory

@@ -1,9 +1,9 @@
 package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
-import com.nodemules.spotify.stats.client.spotify.Category
-import com.nodemules.spotify.stats.client.spotify.CategoryPlaylistsResponse
-import com.nodemules.spotify.stats.client.spotify.SpotifyBrowseClient
+import com.nodemules.spotify.stats.client.spotify.browse.Category
+import com.nodemules.spotify.stats.client.spotify.browse.CategoryPlaylistsResponse
+import com.nodemules.spotify.stats.client.spotify.browse.SpotifyBrowseClient
 import io.vavr.control.Either
 import org.springframework.stereotype.Service
 

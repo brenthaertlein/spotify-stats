@@ -1,4 +1,6 @@
-package com.nodemules.spotify.stats.client.spotify
+package com.nodemules.spotify.stats.client.spotify.browse
+
+import com.nodemules.spotify.stats.client.spotify.Image
 
 data class Category(
     val href: String,
