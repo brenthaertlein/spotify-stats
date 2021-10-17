@@ -2,6 +2,7 @@ package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.client.spotify.Category
+import com.nodemules.spotify.stats.client.spotify.CategoryPlaylistsResponse
 import com.nodemules.spotify.stats.client.spotify.SpotifyBrowseClient
 import io.vavr.control.Either
 import org.springframework.stereotype.Service
@@ -12,4 +13,8 @@ class SpotifyBrowseService(
 ) : SpotifyBrowseOperations {
     override fun getCategories(): Either<Failure, List<Category>> = cacheableSpotifyBrowseClient.getCategories()
         .bimap({ it.copy() }) { it.categories.items }
+
+    override fun getCategoryPlaylists(id: String): Either<Failure, CategoryPlaylistsResponse> =
+        cacheableSpotifyBrowseClient.getCategoryPlaylist(id)
+            .mapLeft { it.copy() }
 }

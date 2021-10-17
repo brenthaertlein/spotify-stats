@@ -1,28 +1,23 @@
 package com.nodemules.spotify.stats.config
 
-import com.fasterxml.jackson.annotation.JsonRawValue
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.ObjectCodec
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TreeTraversingParser
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.nodemules.spotify.stats.Failure
-import com.nodemules.spotify.stats.client.spotify.SpotifyErrorResponse
 import io.vavr.control.Either
 import io.vavr.control.Try
 import mu.KLogging
 import org.springframework.boot.jackson.JsonComponent
 import org.springframework.boot.jackson.JsonObjectDeserializer
-import org.springframework.boot.jackson.JsonObjectSerializer
-import org.springframework.http.HttpStatus
 
 @JsonComponent
 class JacksonConfiguration {
 
+    @Suppress("unused")
     class EitherSerializer : JsonSerializer<Either<*, *>>() {
 
         private val objectMapper = jacksonObjectMapper()
@@ -30,10 +25,7 @@ class JacksonConfiguration {
 
         private fun Any.toFailure() = when (this) {
             is Failure -> this.copy()
-            else -> run {
-                logger.error { "Unable to serialize $this" }
-                Failure.INTERNAL_SERVER_ERROR
-            }
+            else -> run { logger.error { "Unable to serialize $this" }.let { Failure.INTERNAL_SERVER_ERROR } }
         }
 
         override fun serialize(value: Either<*, *>, jgen: JsonGenerator, provider: SerializerProvider) {
@@ -44,6 +36,7 @@ class JacksonConfiguration {
         companion object : KLogging()
     }
 
+    @Suppress("unused")
     class EitherDeserializer : ContextualDeserializer, JsonObjectDeserializer<Either<*, *>>() {
 
         private var type: JavaType? = null

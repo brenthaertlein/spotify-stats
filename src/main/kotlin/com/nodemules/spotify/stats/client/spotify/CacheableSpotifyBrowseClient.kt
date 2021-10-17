@@ -12,5 +12,9 @@ class CacheableSpotifyBrowseClient(
 ) : SpotifyBrowseClient {
 
     @Cacheable(key = "#root.methodName", unless = "#result.isLeft")
-    override fun getCategories(): Either<SpotifyErrorResponse, CategoriesResponse> = spotifyBrowseFeignClient.getCategories()
+    override fun getCategories(): Either<SpotifyErrorResponse, CategoriesResponse> =
+        spotifyBrowseFeignClient.getCategories(SpotifyListQuery(limit = 50))
+
+    @Cacheable(unless = "#result.isLeft")
+    override fun getCategoryPlaylist(id: String) = spotifyBrowseFeignClient.getCategoryPlaylist(id)
 }

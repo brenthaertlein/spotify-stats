@@ -4,8 +4,10 @@ import io.vavr.control.Either
 import mu.KLogging
 import org.springframework.cloud.openfeign.FallbackFactory
 import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.cloud.openfeign.SpringQueryMap
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 
 @FeignClient(
     name = "spotifyBrowseFeignClient",
@@ -16,13 +18,21 @@ import org.springframework.web.bind.annotation.GetMapping
 interface SpotifyBrowseFeignClient {
 
     @GetMapping("/categories")
-    fun getCategories(): Either<SpotifyErrorResponse, CategoriesResponse>
+    fun getCategories(@SpringQueryMap query: SpotifyListQuery = SpotifyListQuery()): Either<SpotifyErrorResponse, CategoriesResponse>
+
+    @GetMapping("/categories/{id}/playlists")
+    fun getCategoryPlaylist(@PathVariable id: String): Either<SpotifyErrorResponse, CategoryPlaylistsResponse>
 
     @Component
     class FeignClientFallbackFactory : FallbackFactory<SpotifyBrowseFeignClient> {
         override fun create(cause: Throwable) = object : SpotifyBrowseFeignClient {
-            override fun getCategories(): Either<SpotifyErrorResponse, CategoriesResponse> {
-                logger.error(cause) { "Error getting stuff" }
+            override fun getCategories(query: SpotifyListQuery): Either<SpotifyErrorResponse, CategoriesResponse> {
+                logger.error(cause) { "Error getting categories with $query" }
+                return Either.left(SpotifyErrorResponse(error = cause.cause.toSpotifyError()))
+            }
+
+            override fun getCategoryPlaylist(id: String): Either<SpotifyErrorResponse, CategoryPlaylistsResponse> {
+                logger.error(cause) { "Error getting playlists for Category(id=$id)" }
                 return Either.left(SpotifyErrorResponse(error = cause.cause.toSpotifyError()))
             }
         }
