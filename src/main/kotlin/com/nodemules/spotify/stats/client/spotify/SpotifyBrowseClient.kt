@@ -4,5 +4,5 @@ import io.vavr.control.Either
 import org.springframework.data.domain.Pageable
 
 interface SpotifyBrowseClient {
-    fun getCategories(pageable: Pageable): Either<SpotifyErrorResponse, CategoriesResponse>
+    fun getCategories(): Either<SpotifyErrorResponse, CategoriesResponse>
 }

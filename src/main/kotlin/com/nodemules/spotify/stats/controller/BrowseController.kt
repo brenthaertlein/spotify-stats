@@ -1,9 +1,6 @@
 package com.nodemules.spotify.stats.controller
 
-import com.nodemules.spotify.stats.client.spotify.SpotifyBrowseClient
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties
-import org.springframework.data.domain.PageRequest
+import com.nodemules.spotify.stats.service.SpotifyBrowseOperations
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -11,9 +8,9 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/browse")
 class BrowseController(
-    private val spotifyBrowseClient: SpotifyBrowseClient
+    private val spotifyBrowseService: SpotifyBrowseOperations
 ) {
 
     @GetMapping("/categories")
-    fun getCategories() = spotifyBrowseClient.getCategories(pageable = PageRequest.of(0, 10))
+    fun getCategories() = spotifyBrowseService.getCategories()
 }

@@ -1,10 +1,13 @@
 package com.nodemules.spotify.stats.config
 
+import com.fasterxml.jackson.annotation.JsonRawValue
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.ObjectCodec
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TreeTraversingParser
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.nodemules.spotify.stats.Failure
@@ -20,9 +23,10 @@ import org.springframework.http.HttpStatus
 @JsonComponent
 class JacksonConfiguration {
 
-    class EitherSerializer : JsonObjectSerializer<Either<*, *>>() {
+    class EitherSerializer : JsonSerializer<Either<*, *>>() {
 
         private val objectMapper = jacksonObjectMapper()
+        private val prettyPrinter = objectMapper.writerWithDefaultPrettyPrinter()
 
         private fun Any.toFailure() = when (this) {
             is Failure -> this.copy()
@@ -32,13 +36,8 @@ class JacksonConfiguration {
             }
         }
 
-        override fun serializeObject(value: Either<*, *>, jgen: JsonGenerator, provider: SerializerProvider) {
-            Try.of {
-                value
-                    .fold({ it.toFailure() }) { it }
-                    .let { objectMapper.readTree(objectMapper.writeValueAsString(it)).fields() }
-                    .forEachRemaining { (key, value) -> jgen.writeObjectField(key, value) }
-            }
+        override fun serialize(value: Either<*, *>, jgen: JsonGenerator, provider: SerializerProvider) {
+            Try.of { value.fold({ it.toFailure() }) { it }.let { jgen.writeRaw(prettyPrinter.writeValueAsString(it)) } }
                 .onFailure { logger.error(it) { "Error serializing controller response" } }
         }
 

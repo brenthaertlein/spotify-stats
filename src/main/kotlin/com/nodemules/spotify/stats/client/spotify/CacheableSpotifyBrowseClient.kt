@@ -3,7 +3,6 @@ package com.nodemules.spotify.stats.client.spotify
 import io.vavr.control.Either
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,5 +12,5 @@ class CacheableSpotifyBrowseClient(
 ) : SpotifyBrowseClient {
 
     @Cacheable(key = "#root.methodName", unless = "#result.isLeft")
-    override fun getCategories(pageable: Pageable): Either<SpotifyErrorResponse, CategoriesResponse> = spotifyBrowseFeignClient.getCategories()
+    override fun getCategories(): Either<SpotifyErrorResponse, CategoriesResponse> = spotifyBrowseFeignClient.getCategories()
 }
