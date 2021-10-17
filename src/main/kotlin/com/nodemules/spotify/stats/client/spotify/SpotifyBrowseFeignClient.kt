@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable
 interface SpotifyBrowseFeignClient {
 
     @GetMapping("/categories")
-    fun getCategories(@SpringQueryMap query: SpotifyListQuery = SpotifyListQuery()): Either<SpotifyErrorResponse, CategoriesResponse>
+    fun getCategories(@SpringQueryMap query: PageableQuery = PageableQuery()): Either<SpotifyErrorResponse, CategoriesResponse>
 
     @GetMapping("/categories/{id}/playlists")
     fun getCategoryPlaylist(@PathVariable id: String): Either<SpotifyErrorResponse, CategoryPlaylistsResponse>
@@ -26,7 +26,7 @@ interface SpotifyBrowseFeignClient {
     @Component
     class FeignClientFallbackFactory : FallbackFactory<SpotifyBrowseFeignClient> {
         override fun create(cause: Throwable) = object : SpotifyBrowseFeignClient {
-            override fun getCategories(query: SpotifyListQuery): Either<SpotifyErrorResponse, CategoriesResponse> {
+            override fun getCategories(query: PageableQuery): Either<SpotifyErrorResponse, CategoriesResponse> {
                 logger.error(cause) { "Error getting categories with $query" }
                 return Either.left(SpotifyErrorResponse(error = cause.cause.toSpotifyError()))
             }

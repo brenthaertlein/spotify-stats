@@ -1,6 +1,6 @@
 package com.nodemules.spotify.stats.client.spotify
 
-data class SpotifyListQuery(
+data class PageableQuery(
     val country: String? = null,
     val locale: String? = null,
     val limit: Int? = null,

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import java.net.URI
 
-data class CategoryPlaylistsResponse(val playlists: BrowseResponse<Playlist>) {
+data class CategoryPlaylistsResponse(val playlists: PageableResponse<Playlist>) {
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
     data class Playlist(
         val collaborative: Boolean,
