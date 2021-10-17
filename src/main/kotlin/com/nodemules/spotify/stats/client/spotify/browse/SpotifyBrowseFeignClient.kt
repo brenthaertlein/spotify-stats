@@ -1,8 +1,11 @@
 package com.nodemules.spotify.stats.client.spotify.browse
 
-import com.nodemules.spotify.stats.client.spotify.*
+import com.nodemules.spotify.stats.client.FeignClientExtensions
+import com.nodemules.spotify.stats.client.spotify.PageableQuery
+import com.nodemules.spotify.stats.client.spotify.SpotifyClientConfiguration
+import com.nodemules.spotify.stats.client.spotify.SpotifyErrorResponse
+import com.nodemules.spotify.stats.client.spotify.browse.SpotifyBrowseFeignClient.FeignClientFallbackFactory
 import io.vavr.control.Either
-import mu.KLogging
 import org.springframework.cloud.openfeign.FallbackFactory
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.cloud.openfeign.SpringQueryMap
@@ -14,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable
     name = "spotifyBrowseFeignClient",
     url = "https://api.spotify.com/v1/browse",
     configuration = [SpotifyClientConfiguration::class],
-    fallbackFactory = SpotifyBrowseFeignClient.FeignClientFallbackFactory::class
+    fallbackFactory = FeignClientFallbackFactory::class
 )
 interface SpotifyBrowseFeignClient {
 
@@ -27,22 +30,13 @@ interface SpotifyBrowseFeignClient {
     @Component
     class FeignClientFallbackFactory : FallbackFactory<SpotifyBrowseFeignClient> {
         override fun create(cause: Throwable) = object : SpotifyBrowseFeignClient {
-            override fun getCategories(query: PageableQuery): Either<SpotifyErrorResponse, CategoriesResponse> {
-                logger.error(cause) { "Error getting categories with $query" }
-                return Either.left(SpotifyErrorResponse(error = cause.cause.toSpotifyError()))
-            }
+            override fun getCategories(query: PageableQuery): Either<SpotifyErrorResponse, CategoriesResponse> =
+                cause.asFallback { "Error getting categories with $query" }
 
-            override fun getCategoryPlaylist(id: String): Either<SpotifyErrorResponse, CategoryPlaylistsResponse> {
-                logger.error(cause) { "Error getting playlists for Category(id=$id)" }
-                return Either.left(SpotifyErrorResponse(error = cause.cause.toSpotifyError()))
-            }
+            override fun getCategoryPlaylist(id: String): Either<SpotifyErrorResponse, CategoryPlaylistsResponse> =
+                cause.asFallback { "Error getting playlists for Category(id=$id)" }
         }
 
-        companion object : KLogging() {
-            private fun Throwable?.toSpotifyError() = when (this) {
-                is SpotifyClientException -> SpotifyErrorResponse.SpotifyError(status = httpStatus.value(), message = message)
-                else -> SpotifyErrorResponse.SpotifyError(status = 500, message = this?.cause?.message ?: "")
-            }
-        }
+        companion object : FeignClientExtensions()
     }
 }

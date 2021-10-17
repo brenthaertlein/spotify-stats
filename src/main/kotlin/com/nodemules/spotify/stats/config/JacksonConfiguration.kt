@@ -55,9 +55,11 @@ class JacksonConfiguration {
             tree: JsonNode?
         ): Either<*, *> = tree?.let {
             Try.of { codec.readValue<Any>(TreeTraversingParser(tree), type) }
+                .onFailure { logger.error(it) { "Error deserializing $type" } }
                 .map { Either.right<Any, Any>(it) }
                 .getOrElseGet { Either.left(codec.readValue(TreeTraversingParser(tree), leftType)) }
         } ?: Either.left<Failure, Any>(Failure.INTERNAL_SERVER_ERROR)
 
+        companion object : KLogging()
     }
 }

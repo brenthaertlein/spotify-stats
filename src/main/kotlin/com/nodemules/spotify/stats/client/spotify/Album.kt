@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 import java.net.URI
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
-data class Owner(
-    val displayName: String,
+data class Album(
+    val albumType: String,
+    val artists: List<Artist>,
     val externalUrls: Map<String, URI>,
     val href: URI,
     val id: String,
+    val images: List<Image>,
+    val name: String,
     val type: String,
     val uri: URI
 )

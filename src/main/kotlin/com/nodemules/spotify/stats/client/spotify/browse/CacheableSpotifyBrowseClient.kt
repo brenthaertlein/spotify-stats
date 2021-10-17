@@ -8,7 +8,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
-@CacheConfig(cacheNames = ["browse"])
+@CacheConfig(cacheNames = ["spotify.browse"])
 class CacheableSpotifyBrowseClient(
     private val spotifyBrowseFeignClient: SpotifyBrowseFeignClient
 ) : SpotifyBrowseClient {
