@@ -30,9 +30,9 @@ class ArtistService(
     override fun getArtists(example: ArtistExample): Either<out Failure, List<Artist>> =
         example.run {
             Query().apply {
-                name?.let { addCriteria(Criteria.where("name").regex(".*$it*", "i")) }
+                name?.let { addCriteria(Criteria.where("name").regex(".*$it.*", "i")) }
                 genres?.run {
-                    addCriteria(Criteria().andOperator(map { Criteria.where("genres").regex(".*$it*", "i") }))
+                    addCriteria(Criteria().andOperator(map { Criteria.where("genres").regex(".*$it.*", "i") }))
                 }
             }
         }
