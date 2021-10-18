@@ -2,6 +2,7 @@ package com.nodemules.spotify.stats.controller
 
 import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.Failure.GenericFailure
+import com.nodemules.spotify.stats.client.spotify.browse.Category
 import com.nodemules.spotify.stats.service.SpotifyBrowseOperations
 import io.vavr.control.Either
 import org.springframework.http.HttpStatus
@@ -17,17 +18,23 @@ class BrowseController(
     fun getCategories() = spotifyBrowseService.getCategories()
 
     @GetMapping("/categories/info/flattened")
-    fun getCategoriesInfo(@RequestParam(defaultValue = "id") property: String): Either<Failure, List<String>> =
+    fun getCategoriesInfo(@RequestParam(defaultValue = "id") property: String): Either<out Failure, List<String>> =
         spotifyBrowseService.getCategories()
-            .flatMap { list ->
-                when (property) {
-                    "id" -> Either.right(list.map { it.id })
-                    "href" -> Either.right(list.map { it.href })
-                    "name" -> Either.right(list.map { it.name })
-                    else -> Either.left(GenericFailure(HttpStatus.BAD_REQUEST, "$property is not available on Category"))
-                }
-            }
+            .map { it.foo(property) }
+            .filter { it.isNotEmpty() }
+            .flatMap { it.toOption() }
+            .toEither { GenericFailure(HttpStatus.NOT_FOUND, "") }
 
     @GetMapping("/categories/{id}/playlists")
     fun getCategoryPlaylists(@PathVariable id: String) = spotifyBrowseService.getCategoryPlaylists(id)
+
+    companion object {
+        private fun Collection<Category>.foo(property: String): List<String> =
+            when (property) {
+                "id" -> map { it.id }
+                "href" -> map { it.href }
+                "name" -> map { it.name }
+                else -> listOf()
+            }
+    }
 }
