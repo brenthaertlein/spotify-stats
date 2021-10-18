@@ -31,7 +31,9 @@ class ArtistService(
         example.run {
             Query().apply {
                 name?.let { addCriteria(Criteria.where("name").regex(".*$it*", "i")) }
-                genres?.let { addCriteria(Criteria.where("genres").`in`(it)) }
+                genres?.run {
+                    addCriteria(Criteria().andOperator(map { Criteria.where("genres").regex(".*$it*", "i") }))
+                }
             }
         }
             .let { mongoTemplate.find(it, Artist::class.java) }
