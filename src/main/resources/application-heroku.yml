@@ -1,6 +1,9 @@
 server:
   port: ${PORT}
 spring:
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI}
   security:
     oauth2:
       client:

@@ -1,7 +1,5 @@
-package com.nodemules.spotify.stats.client
+package com.nodemules.spotify.stats.client.spotify
 
-import com.nodemules.spotify.stats.client.spotify.SpotifyClientException
-import com.nodemules.spotify.stats.client.spotify.SpotifyErrorResponse
 import io.vavr.control.Either
 import mu.KLogging
 
@@ -15,9 +13,6 @@ open class FeignClientExtensions : KLogging() {
 
     private fun Throwable.toSpotifyError(): SpotifyErrorResponse.SpotifyError = when (this) {
         is SpotifyClientException -> SpotifyErrorResponse.SpotifyError(status = httpStatus.value(), message = message)
-        else -> this.cause?.toSpotifyError() ?: SpotifyErrorResponse.SpotifyError(
-            status = 500,
-            message = this.cause?.message ?: ""
-        )
+        else -> cause?.toSpotifyError() ?: SpotifyErrorResponse.SpotifyError(status = 500, message = cause?.message ?: "")
     }
 }

@@ -1,6 +1,6 @@
 package com.nodemules.spotify.stats.client.spotify.browse
 
-import com.nodemules.spotify.stats.client.FeignClientExtensions
+import com.nodemules.spotify.stats.client.spotify.FeignClientExtensions
 import com.nodemules.spotify.stats.client.spotify.PageableQuery
 import com.nodemules.spotify.stats.client.spotify.SpotifyClientConfiguration
 import com.nodemules.spotify.stats.client.spotify.SpotifyErrorResponse

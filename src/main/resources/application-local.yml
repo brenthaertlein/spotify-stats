@@ -11,3 +11,6 @@ logging:
 spring:
   caching:
     time-to-live: 60
+  data:
+    mongodb:
+      uri: mongodb://localhost/spotify-stats

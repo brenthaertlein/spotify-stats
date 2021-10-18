@@ -11,10 +11,9 @@ import org.springframework.stereotype.Service
 class SpotifyBrowseService(
     private val cacheableSpotifyBrowseClient: SpotifyBrowseClient
 ) : SpotifyBrowseOperations {
-    override fun getCategories(): Either<Failure, List<Category>> = cacheableSpotifyBrowseClient.getCategories()
-        .bimap({ it.copy() }) { it.categories.items }
+    override fun getCategories(): Either<out Failure, List<Category>> = cacheableSpotifyBrowseClient.getCategories()
+        .map { it.categories.items }
 
-    override fun getCategoryPlaylists(id: String): Either<Failure, CategoryPlaylistsResponse> =
+    override fun getCategoryPlaylists(id: String): Either<out Failure, CategoryPlaylistsResponse> =
         cacheableSpotifyBrowseClient.getCategoryPlaylist(id)
-            .mapLeft { it.copy() }
 }
