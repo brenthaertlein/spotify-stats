@@ -25,3 +25,4 @@ application:
   cors:
     allowed-origins:
       - "https://nodemules.github.io/spotify-scroll"
+      - "http://localhost:3000"
