@@ -24,5 +24,5 @@ feign:
 application:
   cors:
     allowed-origins:
-      - "https://nodemules.github.io/spotify-scroll"
+      - "https://nodemules.github.io"
       - "http://localhost:3000"
