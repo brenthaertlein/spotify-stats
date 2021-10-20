@@ -21,3 +21,7 @@ spring:
 feign:
   circuitbreaker:
     enabled: true
+application:
+  cors:
+    allowed-origins:
+      - "https://nodemules.github.io/spotify-scroll"

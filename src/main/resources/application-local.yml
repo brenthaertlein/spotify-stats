@@ -14,3 +14,7 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost/spotify-stats
+application:
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
