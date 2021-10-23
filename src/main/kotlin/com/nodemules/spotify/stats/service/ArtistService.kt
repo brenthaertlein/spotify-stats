@@ -1,6 +1,7 @@
 package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
+import com.nodemules.spotify.stats.asNullableList
 import com.nodemules.spotify.stats.client.spotify.Artist
 import com.nodemules.spotify.stats.client.spotify.artist.SpotifyArtistClient
 import com.nodemules.spotify.stats.data.ArtistExample
@@ -109,12 +110,9 @@ class ArtistService(
                 )
                 add(
                     sort?.run {
-                        val (field, direction) = split(",")
-                        val sortDirection = direction.let {
-                            when (it) {
-                                "asc" -> Sort.Direction.ASC
-                                else -> Sort.Direction.DESC
-                            }
+                        val (field, direction) = split(",").asNullableList(2)
+                        val sortDirection = when (direction) {
+                            "asc" -> Sort.Direction.ASC; else -> Sort.Direction.DESC
                         }
                         when (field) {
                             "popularity" -> sort(sortDirection, "mostPopular.popularity")
