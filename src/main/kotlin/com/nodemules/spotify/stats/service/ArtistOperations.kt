@@ -5,6 +5,8 @@ import com.nodemules.spotify.stats.client.spotify.Artist
 import com.nodemules.spotify.stats.data.ArtistExample
 import com.nodemules.spotify.stats.data.Genre
 import io.vavr.control.Either
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
 interface ArtistOperations {
     fun getArtists(example: ArtistExample): Either<out Failure, List<Artist>>
@@ -15,5 +17,5 @@ interface ArtistOperations {
 
     fun getGenres(): Either<out Failure, Collection<String>>
 
-    fun getTopGenres(limit: Long, sort: String?): Either<out Failure, List<Genre>>
+    fun getTopGenres(pageable: Pageable): Either<out Failure, Page<Genre>>
 }

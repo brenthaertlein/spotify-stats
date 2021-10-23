@@ -1,19 +1,22 @@
 package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
-import com.nodemules.spotify.stats.asNullableList
 import com.nodemules.spotify.stats.client.spotify.Artist
 import com.nodemules.spotify.stats.client.spotify.artist.SpotifyArtistClient
 import com.nodemules.spotify.stats.data.ArtistExample
 import com.nodemules.spotify.stats.data.Genre
 import com.nodemules.spotify.stats.persistence.repository.ArtistRepository
 import io.vavr.control.Either
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.aggregation.Aggregation.count
 import org.springframework.data.mongodb.core.aggregation.Aggregation.group
 import org.springframework.data.mongodb.core.aggregation.Aggregation.limit
+import org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation
 import org.springframework.data.mongodb.core.aggregation.Aggregation.project
+import org.springframework.data.mongodb.core.aggregation.Aggregation.skip
 import org.springframework.data.mongodb.core.aggregation.Aggregation.sort
 import org.springframework.data.mongodb.core.aggregation.Aggregation.unwind
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation
@@ -21,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 
@@ -57,7 +61,7 @@ class ArtistService(
         .fold(mutableSetOf<String>()) { list, artist -> list.apply { artist.genres?.onEach { add(it) } } }
         .let { Either.right(it) }
 
-    override fun getTopGenres(limit: Long, sort: String?): Either<out Failure, List<Genre>> =
+    override fun getTopGenres(pageable: Pageable): Either<out Failure, Page<Genre>> =
         mutableListOf<AggregationOperation>()
             .apply {
                 add(unwind("genres"))
@@ -109,21 +113,6 @@ class ArtistService(
                         .addToSet("leastFollowed").`as`("leastFollowed")
                 )
                 add(
-                    sort?.run {
-                        val (field, direction) = split(",").asNullableList(2)
-                        val sortDirection = when (direction) {
-                            "asc" -> Sort.Direction.ASC; else -> Sort.Direction.DESC
-                        }
-                        when (field) {
-                            "popularity" -> sort(sortDirection, "mostPopular.popularity")
-                            "followers" -> sort(sortDirection, "mostFollowed.followers.total")
-                            "count" -> sort(sortDirection, "count")
-                            else -> null
-                        }
-                    } ?: sort(Sort.Direction.DESC, "count")
-                )
-                add(limit(limit))
-                add(
                     project().andExpression("_id").`as`("genre")
                         .and("mostPopular").arrayElementAt(0).`as`("mostPopular")
                         .and("leastPopular").arrayElementAt(0).`as`("leastPopular")
@@ -131,8 +120,36 @@ class ArtistService(
                         .and("leastFollowed").arrayElementAt(0).`as`("leastFollowed")
                         .andInclude("count")
                 )
+                add(
+                    pageable.sort.run {
+                        map {
+                            val sortDirection = getOrderFor(it.property)?.direction ?: Sort.Direction.DESC
+                            when (it.property) {
+                                "popularity" -> Sort.Order(sortDirection, "mostPopular.popularity")
+                                "followers" -> Sort.Order(sortDirection, "mostFollowed.followers.total")
+                                "count" -> Sort.Order(sortDirection, "count")
+                                else -> Sort.Order(Sort.Direction.DESC, "count")
+                            }
+                        }
+                    }.let { sort(Sort.by(it.toList())) }
+                )
+                add(skip(pageable.offset))
+                add(limit(pageable.pageSize.toLong()))
             }
-            .run { this.toTypedArray() }
-            .run { mongoTemplate.aggregate(Aggregation.newAggregation(*this), Artist::class.java, Genre::class.java) }
-            .let { Either.right(it.mappedResults) }
+            .run { mongoTemplate.aggregate(newAggregation(*toTypedArray()), Artist::class.java, Genre::class.java) }
+            .let {
+                Either.right(PageableExecutionUtils.getPage(it.mappedResults, pageable) {
+                    mongoTemplate.aggregate(
+                        newAggregation(
+                            unwind("genres"),
+                            group("genres"),
+                            count().`as`("count")
+                        ),
+                        Artist::class.java,
+                        Count::class.java
+                    ).mappedResults[0].count
+                })
+            }
+
+    data class Count(val count: Long)
 }
