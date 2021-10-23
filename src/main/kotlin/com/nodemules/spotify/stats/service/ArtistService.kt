@@ -5,13 +5,14 @@ import com.nodemules.spotify.stats.client.spotify.Artist
 import com.nodemules.spotify.stats.client.spotify.artist.SpotifyArtistClient
 import com.nodemules.spotify.stats.data.ArtistExample
 import com.nodemules.spotify.stats.data.Genre
+import com.nodemules.spotify.stats.page
 import com.nodemules.spotify.stats.persistence.repository.ArtistRepository
 import io.vavr.control.Either
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.aggregation.Aggregation.count
+import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.Aggregation.group
 import org.springframework.data.mongodb.core.aggregation.Aggregation.limit
 import org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation
@@ -24,7 +25,6 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
-import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 
@@ -52,12 +52,7 @@ class ArtistService(
                 }
             }
         }
-            .let {
-                PageableExecutionUtils.getPage(mongoTemplate.find(Query.of(it).with(pageable), Artist::class.java), pageable) {
-                    mongoTemplate.count(it, Artist::class.java)
-                }
-            }
-            .let { Either.right(it) }
+            .let { Either.right(mongoTemplate.page(it, Artist::class.java, pageable)) }
 
     override fun getGenres(): Either<out Failure, Collection<String>> = artistRepository.findAll()
         .fold(mutableSetOf<String>()) { list, artist -> list.apply { artist.genres?.onEach { add(it) } } }
@@ -138,20 +133,12 @@ class ArtistService(
                 add(skip(pageable.offset))
                 add(limit(pageable.pageSize.toLong()))
             }
-            .run { mongoTemplate.aggregate(newAggregation(*toTypedArray()), Artist::class.java, Genre::class.java) }
-            .let {
-                Either.right(PageableExecutionUtils.getPage(it.mappedResults, pageable) {
-                    mongoTemplate.aggregate(
-                        newAggregation(
-                            unwind("genres"),
-                            group("genres"),
-                            count().`as`("count")
-                        ),
-                        Artist::class.java,
-                        Count::class.java
-                    ).mappedResults[0].count
-                })
+            .run {
+                mongoTemplate.page(newAggregation(Artist::class.java, *toTypedArray()), pageable, Genre::class.java) {
+                    newAggregation(Artist::class.java, unwind("genres"), group("genres"), Aggregation.count().`as`("count"))
+                }
             }
+            .let { Either.right(it) }
 
-    data class Count(val count: Long)
+
 }
