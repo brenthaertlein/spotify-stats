@@ -10,9 +10,16 @@ import io.vavr.control.Either
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.aggregation.Aggregation.group
+import org.springframework.data.mongodb.core.aggregation.Aggregation.limit
+import org.springframework.data.mongodb.core.aggregation.Aggregation.project
+import org.springframework.data.mongodb.core.aggregation.Aggregation.sort
+import org.springframework.data.mongodb.core.aggregation.Aggregation.unwind
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 
@@ -52,11 +59,60 @@ class ArtistService(
     override fun getTopGenres(limit: Long): Either<out Failure, List<Genre>> =
         mutableListOf<AggregationOperation>()
             .apply {
-                add(Aggregation.unwind("genres"))
-                add(Aggregation.group("genres").count().`as`("count").addToSet("popularity").`as`("popularity"))
-                add(Aggregation.sort(Sort.Direction.DESC, "count"))
-                add(Aggregation.limit(limit))
-                add(Aggregation.project().andExpression("_id").`as`("genre").andInclude("count", "popularity"))
+                add(unwind("genres"))
+                add(
+                    group("genres")
+                        .addToSet("\$\$ROOT").`as`("artists")
+                        .min("popularity").`as`("minPopularity")
+                        .max("popularity").`as`("maxPopularity")
+                        .min("followers.total").`as`("minFollowers")
+                        .max("followers.total").`as`("maxFollowers")
+                )
+                add(unwind("artists"))
+                add(
+                    project("_id")
+                        .and(
+                            ConditionalOperators.`when`(Criteria.where("artists.popularity").isEqualTo("\$maxPopularity"))
+                                .then("\$artists").otherwise("\$\$REMOVE")
+                        ).`as`("mostPopular")
+                        .and(
+                            ConditionalOperators.`when`(
+                                Criteria.where("artists.popularity").isEqualTo("\$minPopularity")
+                                    .andOperator(Criteria.where("artists.popularity").`is`("\$maxPopularity").not())
+                            )
+                                .then("\$artists").otherwise("\$\$REMOVE")
+                        ).`as`("leastPopular")
+                        .and(
+                            ConditionalOperators.`when`(Criteria.where("artists.followers.total").isEqualTo("\$maxFollowers"))
+                                .then("\$artists").otherwise("\$\$REMOVE")
+                        ).`as`("mostFollowed")
+                        .and(
+                            ConditionalOperators.`when`(
+                                Criteria.where("artists.followers.total").isEqualTo("\$minFollowers")
+                                    .andOperator(Criteria.where("artists.followers.total").`is`("\$maxFollowers").not())
+                            )
+                                .then("\$artists").otherwise("\$\$REMOVE")
+                        ).`as`("leastFollowed")
+
+                )
+                add(
+                    group("_id")
+                        .count().`as`("count")
+                        .addToSet("mostPopular").`as`("mostPopular")
+                        .addToSet("leastPopular").`as`("leastPopular")
+                        .addToSet("mostFollowed").`as`("mostFollowed")
+                        .addToSet("leastFollowed").`as`("leastFollowed")
+                )
+                add(sort(Sort.Direction.DESC, "count"))
+                add(limit(limit))
+                add(
+                    project().andExpression("_id").`as`("genre")
+                        .and("mostPopular").arrayElementAt(0).`as`("mostPopular")
+                        .and("leastPopular").arrayElementAt(0).`as`("leastPopular")
+                        .and("mostFollowed").arrayElementAt(0).`as`("mostFollowed")
+                        .and("leastFollowed").arrayElementAt(0).`as`("leastFollowed")
+                        .andInclude("count")
+                )
             }
             .run { this.toTypedArray() }
             .run { mongoTemplate.aggregate(Aggregation.newAggregation(*this), Artist::class.java, Genre::class.java) }
