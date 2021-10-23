@@ -43,7 +43,7 @@ class ArtistService(
 
     override fun getArtists(ids: Collection<String>): Either<out Failure, List<Artist>> = spotifyArtistClient.getArtists(ids)
 
-    override fun getArtists(example: ArtistExample): Either<out Failure, List<Artist>> =
+    override fun getArtists(example: ArtistExample, pageable: Pageable): Either<out Failure, Page<Artist>> =
         example.run {
             Query().apply {
                 name?.let { addCriteria(Criteria.where("name").regex(".*$it.*", "i")) }
@@ -52,10 +52,12 @@ class ArtistService(
                 }
             }
         }
-            .let { mongoTemplate.find(it, Artist::class.java) }
-            .takeUnless { it.isEmpty() }
-            ?.let { Either.right(it) }
-            ?: Either.left(Failure.GenericFailure(HttpStatus.NOT_FOUND, "Unable to find artists for $example"))
+            .let {
+                PageableExecutionUtils.getPage(mongoTemplate.find(Query.of(it).with(pageable), Artist::class.java), pageable) {
+                    mongoTemplate.count(it, Artist::class.java)
+                }
+            }
+            .let { Either.right(it) }
 
     override fun getGenres(): Either<out Failure, Collection<String>> = artistRepository.findAll()
         .fold(mutableSetOf<String>()) { list, artist -> list.apply { artist.genres?.onEach { add(it) } } }

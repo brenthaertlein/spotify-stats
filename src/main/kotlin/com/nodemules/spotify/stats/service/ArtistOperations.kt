@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
 interface ArtistOperations {
-    fun getArtists(example: ArtistExample): Either<out Failure, List<Artist>>
+    fun getArtists(example: ArtistExample, pageable: Pageable): Either<out Failure, Page<Artist>>
 
     fun getArtists(ids: Collection<String>): Either<out Failure, List<Artist>>
 

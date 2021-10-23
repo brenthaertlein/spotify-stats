@@ -14,7 +14,7 @@ class ArtistController(
 ) {
 
     @GetMapping("")
-    fun getArtists(example: ArtistExample) = artistOperations.getArtists(example)
+    fun getArtists(example: ArtistExample, pageable: Pageable) = artistOperations.getArtists(example, pageable)
 
     @GetMapping("/info/genres")
     fun getGenres() = artistOperations.getGenres()
