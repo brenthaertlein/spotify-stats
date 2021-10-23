@@ -117,6 +117,7 @@ class ArtistService(
                         when (field) {
                             "popularity" -> sort(sortDirection, "mostPopular.popularity")
                             "followers" -> sort(sortDirection, "mostFollowed.followers.total")
+                            "count" -> sort(sortDirection, "count")
                             else -> null
                         }
                     } ?: sort(Sort.Direction.DESC, "count")
