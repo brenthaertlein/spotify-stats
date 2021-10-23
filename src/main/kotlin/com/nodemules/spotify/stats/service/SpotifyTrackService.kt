@@ -2,7 +2,6 @@ package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.Failure.GenericFailure
-import com.nodemules.spotify.stats.client.StringCachingClient
 import com.nodemules.spotify.stats.client.spotify.Track
 import com.nodemules.spotify.stats.narrowFlatMap
 import com.nodemules.spotify.stats.sample
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component
 class SpotifyTrackService(
     private val spotifyBrowseService: SpotifyBrowseOperations,
     private val spotifyPlaylistService: SpotifyPlaylistOperations,
-    private val cachingClient: StringCachingClient<Track>
 ) : SpotifyTrackOperations {
 
     override fun getRandomTrack(category: String?): Either<out Failure, Track> =

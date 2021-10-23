@@ -7,5 +7,4 @@ data class Category(
     val icons: List<Image>,
     val id: String,
     val name: String
-) {
-}
+)
