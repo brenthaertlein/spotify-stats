@@ -20,5 +20,6 @@ class ArtistController(
     fun getGenres() = artistOperations.getGenres()
 
     @GetMapping("/info/genres/top")
-    fun getTopGenres(@RequestParam(required = false) limit: Long?) = artistOperations.getTopGenres(limit ?: 10)
+    fun getTopGenres(@RequestParam(required = false) limit: Long?, @RequestParam(required = false) sort: String? = null) =
+        artistOperations.getTopGenres(limit ?: 10, sort)
 }

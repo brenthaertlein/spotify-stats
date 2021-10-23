@@ -15,5 +15,5 @@ interface ArtistOperations {
 
     fun getGenres(): Either<out Failure, Collection<String>>
 
-    fun getTopGenres(limit: Long): Either<out Failure, List<Genre>>
+    fun getTopGenres(limit: Long, sort: String?): Either<out Failure, List<Genre>>
 }

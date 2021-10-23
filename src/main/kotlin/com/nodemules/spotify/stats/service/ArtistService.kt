@@ -56,7 +56,7 @@ class ArtistService(
         .fold(mutableSetOf<String>()) { list, artist -> list.apply { artist.genres?.onEach { add(it) } } }
         .let { Either.right(it) }
 
-    override fun getTopGenres(limit: Long): Either<out Failure, List<Genre>> =
+    override fun getTopGenres(limit: Long, sort: String?): Either<out Failure, List<Genre>> =
         mutableListOf<AggregationOperation>()
             .apply {
                 add(unwind("genres"))
@@ -77,8 +77,10 @@ class ArtistService(
                         ).`as`("mostPopular")
                         .and(
                             ConditionalOperators.`when`(
-                                Criteria.where("artists.popularity").isEqualTo("\$minPopularity")
-                                    .andOperator(Criteria.where("artists.popularity").`is`("\$maxPopularity").not())
+                                Criteria().andOperator(
+                                    Criteria.where("artists.popularity").isEqualTo("\$minPopularity"),
+                                    Criteria.where("artists.popularity").ne("\$maxPopularity")
+                                )
                             )
                                 .then("\$artists").otherwise("\$\$REMOVE")
                         ).`as`("leastPopular")
@@ -88,8 +90,10 @@ class ArtistService(
                         ).`as`("mostFollowed")
                         .and(
                             ConditionalOperators.`when`(
-                                Criteria.where("artists.followers.total").isEqualTo("\$minFollowers")
-                                    .andOperator(Criteria.where("artists.followers.total").`is`("\$maxFollowers").not())
+                                Criteria().andOperator(
+                                    Criteria.where("artists.followers.total").ne("\$maxFollowers"),
+                                    Criteria.where("artists.followers.total").isEqualTo("\$minFollowers")
+                                )
                             )
                                 .then("\$artists").otherwise("\$\$REMOVE")
                         ).`as`("leastFollowed")
@@ -103,7 +107,22 @@ class ArtistService(
                         .addToSet("mostFollowed").`as`("mostFollowed")
                         .addToSet("leastFollowed").`as`("leastFollowed")
                 )
-                add(sort(Sort.Direction.DESC, "count"))
+                add(
+                    sort?.run {
+                        val (field, direction) = split(",")
+                        val sortDirection = direction.let {
+                            when (it) {
+                                "asc" -> Sort.Direction.ASC
+                                else -> Sort.Direction.DESC
+                            }
+                        }
+                        when (field) {
+                            "popularity" -> sort(sortDirection, "mostPopular.popularity")
+                            "followers" -> sort(sortDirection, "mostFollowed.followers.total")
+                            else -> null
+                        }
+                    } ?: sort(Sort.Direction.DESC, "count")
+                )
                 add(limit(limit))
                 add(
                     project().andExpression("_id").`as`("genre")
