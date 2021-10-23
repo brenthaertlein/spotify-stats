@@ -18,7 +18,7 @@ class SpotifyPlaylistService(
 
     override fun getPlaylistTracks(playlistId: String): Either<SpotifyErrorResponse, List<Track>> =
         cacheableSpotifyPlaylistClient.getPlaylistTracks(playlistId)
-            .map { (items) -> items.mapNotNull { cacheableSpotifyTracksClient.put(it.track).orNull } }
+            .map { (items) -> items.mapNotNull { (_, _, _, track) -> track?.let { cacheableSpotifyTracksClient.put(it).orNull } } }
             .peek { tracks ->
                 tracks.fold(mutableListOf<Artist>()) { list, track -> list.apply { track.album.artists.onEach { add(it) } } }
                     .filter { it.type == "artist" }

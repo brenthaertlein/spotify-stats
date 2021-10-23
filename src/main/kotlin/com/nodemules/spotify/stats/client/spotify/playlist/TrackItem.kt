@@ -11,7 +11,5 @@ data class TrackItem(
     val addedAt: Instant,
     val addedBy: User?,
     val isLocal: Boolean,
-    val track: Track
-) {
-
-}
+    val track: Track?
+)
