@@ -32,5 +32,5 @@ class CacheableSpotifyTracksClient(
         ?.run { this as Either<*, *> }
         ?.run { orNull as Track }
         ?.let { Either.right(it) }
-        ?: Either.left(GenericFailure(HttpStatus.NOT_FOUND, "Unable to find random track"))
+        ?: Either.left(GenericFailure(HttpStatus.NOT_FOUND, "Unable to find random track in cache [spotify.tracks]"))
 }

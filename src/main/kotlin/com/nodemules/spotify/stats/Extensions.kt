@@ -13,6 +13,8 @@ fun <T> Collection<T>.sample(): T? = this.asSequence().shuffled().find { true }
 inline fun <L, R, R2> Either<out L, out R>.narrowFlatMap(crossinline mapper: (R) -> Either<out L, out R2>): Either<L, R2> =
     Either.narrow(this).flatMap { Either.narrow(mapper(it)) }
 
+fun <L, R> Either<L, R>.flatMapLeft(leftMapper: (left: L) -> Either<L, R>): Either<L, R> = this.fold(leftMapper) { Either.right(it) }
+
 fun <T> MongoTemplate.page(query: Query, entityClass: Class<T>, pageable: Pageable): Page<T> =
     PageableExecutionUtils.getPage(find(Query.of(query).with(pageable), entityClass), pageable) { count(query, entityClass) }
 

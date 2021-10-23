@@ -6,7 +6,11 @@ import com.nodemules.spotify.stats.client.spotify.browse.Category
 import com.nodemules.spotify.stats.service.SpotifyBrowseOperations
 import io.vavr.control.Either
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/browse")
@@ -20,7 +24,7 @@ class BrowseController(
     @GetMapping("/categories/info/flattened")
     fun getCategoriesInfo(@RequestParam(defaultValue = "id") property: String): Either<out Failure, List<String>> =
         spotifyBrowseService.getCategories()
-            .map { it.foo(property) }
+            .map { it.flatten(property) }
             .filter { it.isNotEmpty() }
             .flatMap { it.toOption() }
             .toEither { GenericFailure(HttpStatus.NOT_FOUND, "") }
@@ -29,7 +33,7 @@ class BrowseController(
     fun getCategoryPlaylists(@PathVariable id: String) = spotifyBrowseService.getCategoryPlaylists(id)
 
     companion object {
-        private fun Collection<Category>.foo(property: String): List<String> =
+        private fun Collection<Category>.flatten(property: String): List<String> =
             when (property) {
                 "id" -> map { it.id }
                 "href" -> map { it.href }
