@@ -18,8 +18,7 @@ class SpotifyTrackService(
 ) : SpotifyTrackOperations {
 
     override fun getRandomTrack(category: String?): Either<out Failure, Track> =
-        run { category?.let { getCompletelyRandomTrack(it.lowercase()) } ?: cachingClient.random() }
-            .fold({ getCompletelyRandomTrack() }) { Either.right(it) }
+        category?.let { getCompletelyRandomTrack(it.lowercase()) } ?: getCompletelyRandomTrack()
 
     private fun getCompletelyRandomTrack(category: String? = null) =
         run { category?.let { getRandomPlaylist(category) } ?: getRandomPlaylist() }
