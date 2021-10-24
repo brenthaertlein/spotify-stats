@@ -14,8 +14,16 @@ jobs:
     name: Deploy to Heroku
     runs-on: ubuntu-18.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.2
+          arguments: clean build
 
       - name: Docker Build
         run: docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com

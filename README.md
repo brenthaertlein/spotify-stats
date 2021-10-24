@@ -1,6 +1,7 @@
 # Spotify Stats
 
 [![codecov](https://codecov.io/gh/brenthaertlein/spotify-stats/branch/main/graph/badge.svg?token=4O5N0S3725)](https://codecov.io/gh/brenthaertlein/spotify-stats)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=brenthaertlein_spotify-stats&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=brenthaertlein_spotify-stats)
 
 An API to aggregate data from Spotify Web API
 
