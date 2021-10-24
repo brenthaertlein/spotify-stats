@@ -32,7 +32,7 @@ class SpotifyClient(
         )
     }
 
-    fun getPlaylists(categoryId: String, response: () -> CategoryPlaylistsResponse) {
+    fun getCategoryPlaylists(categoryId: String, response: () -> CategoryPlaylistsResponse) {
         stubFor(
             get(urlPathEqualTo("/v1/browse/categories/$categoryId/playlists"))
                 .withHeader("Authorization", equalTo("Bearer $ACCESS_TOKEN"))

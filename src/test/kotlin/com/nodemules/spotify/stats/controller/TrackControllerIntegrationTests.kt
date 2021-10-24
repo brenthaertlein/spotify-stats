@@ -43,7 +43,7 @@ class TrackControllerIntegrationTests(
     @Test
     fun `getRandomTrack - SUCCESS`() {
         spotifyClient.getCategories { SpotifyClient.categoriesResponse(CATEGORY_PUNK) }
-        spotifyClient.getPlaylists("punk") { SpotifyClient.categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
+        spotifyClient.getCategoryPlaylists("punk") { SpotifyClient.categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
         spotifyClient.getPlaylistTracks("punk_shit") { SpotifyClient.playlistResponse(TRACK_WHITE_RIOT) }
 
         mockMvc.get("/track/recent/random")
@@ -56,7 +56,7 @@ class TrackControllerIntegrationTests(
 
     @Test
     fun `getRandomTrack - SUCCESS - category=punk`() {
-        spotifyClient.getPlaylists("punk") { SpotifyClient.categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
+        spotifyClient.getCategoryPlaylists("punk") { SpotifyClient.categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
         spotifyClient.getPlaylistTracks("punk_shit") { SpotifyClient.playlistResponse(TRACK_WHITE_RIOT) }
 
         mockMvc.get("/track/recent/random") {
