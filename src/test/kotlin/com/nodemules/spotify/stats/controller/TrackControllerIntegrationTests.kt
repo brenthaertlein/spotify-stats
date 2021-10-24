@@ -1,12 +1,6 @@
 package com.nodemules.spotify.stats.controller
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import com.github.tomakehurst.wiremock.standalone.MappingsLoader
+import com.nodemules.spotify.stats.SpotifyClient
 import com.nodemules.spotify.stats.client.spotify.Album
 import com.nodemules.spotify.stats.client.spotify.Artist
 import com.nodemules.spotify.stats.client.spotify.PageableResponse
@@ -26,7 +20,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Instant
@@ -56,21 +49,9 @@ class TrackControllerIntegrationTests(
 
     @Test
     fun `getRandomTrack - SUCCESS`() {
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/browse/categories"))
-                .withQueryParam("limit", WireMock.equalTo("50"))
-                .willReturn(okForJson(categoriesResponse(CATEGORY_PUNK)))
-        )
-
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/browse/categories/punk/playlists"))
-                .willReturn(okForJson(categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT)))
-        )
-
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/playlists/punk_shit/tracks"))
-                .willReturn(okForJson(playlistResponse(TRACK_WHITE_RIOT)))
-        )
+        spotifyClient.getCategories { categoriesResponse(CATEGORY_PUNK) }
+        spotifyClient.getPlaylists("punk") { categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
+        spotifyClient.getPlaylistTracks("punk_shit") { playlistResponse(TRACK_WHITE_RIOT) }
 
         mockMvc.get("/track/recent/random")
             .andDo { log() }
@@ -82,15 +63,8 @@ class TrackControllerIntegrationTests(
 
     @Test
     fun `getRandomTrack - SUCCESS - category=punk`() {
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/browse/categories/punk/playlists"))
-                .willReturn(okForJson(categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT)))
-        )
-
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/playlists/punk_shit/tracks"))
-                .willReturn(okForJson(playlistResponse(TRACK_WHITE_RIOT)))
-        )
+        spotifyClient.getPlaylists("punk") { categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
+        spotifyClient.getPlaylistTracks("punk_shit") { playlistResponse(TRACK_WHITE_RIOT) }
 
         mockMvc.get("/track/recent/random") {
             param("category", "punk")
@@ -104,11 +78,7 @@ class TrackControllerIntegrationTests(
 
     @Test
     fun `getRandomTracks - SUCCESS - artist=thursday`() {
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/artists/thursday/top-tracks"))
-                .withQueryParam("market", WireMock.equalTo("US"))
-                .willReturn(okForJson(TopTracksResponse(tracks = listOf(TRACK_UNDERSTANDING_IN_A_CAR_CRASH))))
-        )
+        spotifyClient.getTopTracks("thursday") { TopTracksResponse(tracks = listOf(TRACK_UNDERSTANDING_IN_A_CAR_CRASH)) }
 
         mockMvc.get("/track/recent/random") {
             param("artist", "thursday")
@@ -122,11 +92,7 @@ class TrackControllerIntegrationTests(
 
     @Test
     fun `getRandomTracks - SUCCESS - genres=new jersey,emo`() {
-        spotifyClient.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo("/v1/artists/thursday/top-tracks"))
-                .withQueryParam("market", WireMock.equalTo("US"))
-                .willReturn(okForJson(TopTracksResponse(tracks = listOf(TRACK_UNDERSTANDING_IN_A_CAR_CRASH))))
-        )
+        spotifyClient.getTopTracks("thursday") { TopTracksResponse(tracks = listOf(TRACK_UNDERSTANDING_IN_A_CAR_CRASH)) }
 
         mockMvc.get("/track/recent/random") {
             param("genres", "new jersey,emo")
@@ -139,34 +105,7 @@ class TrackControllerIntegrationTests(
     }
 
     companion object {
-        private val objectMapper = jacksonObjectMapper().apply { registerModule(JavaTimeModule()) }
-
-        private val spotifyClient = WireMockServer(
-            object : WireMockConfiguration() {
-                override fun mappingsLoader() = MappingsLoader {
-                    it.addMapping(
-                        WireMock.post("/token")
-                            .willReturn(
-                                ResponseDefinitionBuilder.responseDefinition()
-                                    .withStatus(200)
-                                    .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                                    .withBody(
-                                        """
-                                {
-                                    "access_token"      : "foo",
-                                    "token_type"        : "Bearer",
-                                    "expires_in"        : 3600
-                                }
-                                """.trimIndent()
-                                    )
-                            )
-                            .build()
-                    )
-                }
-            }.port(12345)
-        ).apply {
-            start()
-        }
+        private val spotifyClient = SpotifyClient(port = 12345)
 
         private val ARTIST_THE_CLASH = Artist(
             id = "the_clash",
@@ -220,12 +159,6 @@ class TrackControllerIntegrationTests(
         private val PLAYLIST_PUNK_SHIT = Playlist(id = "punk_shit", name = "The most punk shit you'll ever hear")
 
         private val ARTISTS = listOf(ARTIST_THE_CLASH, ARTIST_THURSDAY)
-
-        fun <T> okForJson(it: T): ResponseDefinitionBuilder =
-            ResponseDefinitionBuilder.responseDefinition()
-                .withStatus(200)
-                .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .withBody(objectMapper.writeValueAsBytes(it))
 
         fun playlistResponse(vararg tracks: Track): PageableResponse<TrackItem> = PageableResponse(
             items = tracks.map { TrackItem(track = it, addedAt = Instant.now()) },
