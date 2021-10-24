@@ -1,0 +1,17 @@
+name: Generating Code Coverage
+
+on: [ push, pull_request ]
+
+jobs:
+  Generate-Code-Coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: ./gradlew clean test jacocoTestReport
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

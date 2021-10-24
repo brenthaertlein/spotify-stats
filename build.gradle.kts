@@ -2,6 +2,7 @@ import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    jacoco
     id("org.springframework.boot") version "2.5.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     kotlin("jvm") version "1.5.31"
@@ -69,4 +70,12 @@ tasks.withType<Test> {
 
 tasks.register("appVersion") {
     println(project.version)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
 }
