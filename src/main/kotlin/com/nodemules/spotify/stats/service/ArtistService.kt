@@ -126,7 +126,7 @@ class ArtistService(
                         .takeUnless { it.isEmpty }
                         ?.run {
                             map {
-                                val sortDirection = getOrderFor(it.property)?.direction ?: Sort.Direction.DESC
+                                val sortDirection = getOrderFor(it.property)?.direction ?: Sort.Direction.ASC
                                 when (it.property) {
                                     "popularity" -> Sort.Order(sortDirection, "mostPopular.popularity")
                                     "followers" -> Sort.Order(sortDirection, "mostFollowed.followers.total")

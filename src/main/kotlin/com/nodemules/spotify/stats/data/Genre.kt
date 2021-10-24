@@ -17,7 +17,7 @@ data class Genre(
         val uri: String,
         val popularity: Long,
         @JsonUnwrapped
-        val followers: Followers
+        val followers: Followers? = null
     ) {
         data class Followers(@JsonProperty("followers") val total: Long)
     }

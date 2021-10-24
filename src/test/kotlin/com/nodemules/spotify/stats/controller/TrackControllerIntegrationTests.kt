@@ -1,40 +1,38 @@
 package com.nodemules.spotify.stats.controller
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.nodemules.spotify.stats.SpotifyClient
+import com.nodemules.spotify.stats.categoriesPlaylistResponse
+import com.nodemules.spotify.stats.categoriesResponse
 import com.nodemules.spotify.stats.client.spotify.Album
 import com.nodemules.spotify.stats.client.spotify.Artist
-import com.nodemules.spotify.stats.client.spotify.PageableResponse
 import com.nodemules.spotify.stats.client.spotify.Playlist
 import com.nodemules.spotify.stats.client.spotify.Track
 import com.nodemules.spotify.stats.client.spotify.artist.TopTracksResponse
-import com.nodemules.spotify.stats.client.spotify.browse.CategoriesResponse
 import com.nodemules.spotify.stats.client.spotify.browse.Category
-import com.nodemules.spotify.stats.client.spotify.browse.CategoryPlaylistsResponse
-import com.nodemules.spotify.stats.client.spotify.playlist.TrackItem
-import org.junit.jupiter.api.AfterEach
+import com.nodemules.spotify.stats.playlistResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.DisposableBean
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
-import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TrackControllerIntegrationTests(
-    @Autowired val mockMvc: MockMvc,
-    @Autowired val mongoTemplate: MongoTemplate
-) : DisposableBean {
-
-    override fun destroy() {
-        spotifyClient.stop()
-    }
+    @Autowired private val mockMvc: MockMvc,
+    @Autowired private val mongoTemplate: MongoTemplate,
+    @Qualifier("spotifyClientWireMockServer") @Autowired private val wireMockServer: WireMockServer
+) {
+    private val spotifyClient: SpotifyClient = SpotifyClient(wireMockServer)
 
     @BeforeEach
     fun beforeEach() {
@@ -42,16 +40,11 @@ class TrackControllerIntegrationTests(
         mongoTemplate.insertAll(ARTISTS)
     }
 
-    @AfterEach
-    fun afterEach() {
-        spotifyClient.resetToDefaultMappings()
-    }
-
     @Test
     fun `getRandomTrack - SUCCESS`() {
-        spotifyClient.getCategories { categoriesResponse(CATEGORY_PUNK) }
-        spotifyClient.getPlaylists("punk") { categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
-        spotifyClient.getPlaylistTracks("punk_shit") { playlistResponse(TRACK_WHITE_RIOT) }
+        spotifyClient.getCategories { SpotifyClient.categoriesResponse(CATEGORY_PUNK) }
+        spotifyClient.getCategoryPlaylists("punk") { SpotifyClient.categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
+        spotifyClient.getPlaylistTracks("punk_shit") { SpotifyClient.playlistResponse(TRACK_WHITE_RIOT) }
 
         mockMvc.get("/track/recent/random")
             .andDo { log() }
@@ -63,8 +56,8 @@ class TrackControllerIntegrationTests(
 
     @Test
     fun `getRandomTrack - SUCCESS - category=punk`() {
-        spotifyClient.getPlaylists("punk") { categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
-        spotifyClient.getPlaylistTracks("punk_shit") { playlistResponse(TRACK_WHITE_RIOT) }
+        spotifyClient.getCategoryPlaylists("punk") { SpotifyClient.categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT) }
+        spotifyClient.getPlaylistTracks("punk_shit") { SpotifyClient.playlistResponse(TRACK_WHITE_RIOT) }
 
         mockMvc.get("/track/recent/random") {
             param("category", "punk")
@@ -105,7 +98,6 @@ class TrackControllerIntegrationTests(
     }
 
     companion object {
-        private val spotifyClient = SpotifyClient(port = 12345)
 
         private val ARTIST_THE_CLASH = Artist(
             id = "the_clash",
@@ -159,35 +151,5 @@ class TrackControllerIntegrationTests(
         private val PLAYLIST_PUNK_SHIT = Playlist(id = "punk_shit", name = "The most punk shit you'll ever hear")
 
         private val ARTISTS = listOf(ARTIST_THE_CLASH, ARTIST_THURSDAY)
-
-        fun playlistResponse(vararg tracks: Track): PageableResponse<TrackItem> = PageableResponse(
-            items = tracks.map { TrackItem(track = it, addedAt = Instant.now()) },
-            href = "",
-            limit = 20,
-            offset = 0,
-            total = tracks.size
-        )
-
-        fun categoriesPlaylistResponse(vararg playlists: Playlist) =
-            CategoryPlaylistsResponse(
-                playlists = PageableResponse(
-                    items = listOf(*playlists),
-                    href = "",
-                    limit = 20,
-                    offset = 0,
-                    total = playlists.size
-                )
-            )
-
-        fun categoriesResponse(vararg categories: Category) =
-            CategoriesResponse(
-                categories = PageableResponse(
-                    items = listOf(*categories),
-                    href = "",
-                    limit = 50,
-                    offset = 0,
-                    total = categories.size
-                )
-            )
     }
 }
