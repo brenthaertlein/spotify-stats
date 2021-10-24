@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 
 @FeignClient(
     name = "spotifyBrowseFeignClient",
-    url = "https://api.spotify.com/v1/browse",
+    url = "\${feign.client.config.spotify.host}/v1/browse",
     configuration = [SpotifyClientConfiguration::class],
     fallbackFactory = FeignClientFallbackFactory::class
 )

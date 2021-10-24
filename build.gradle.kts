@@ -55,6 +55,8 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:3.0.4")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    testImplementation("com.github.tomakehurst:wiremock:2.26.2")
 }
 
 tasks.withType<KotlinCompile> {

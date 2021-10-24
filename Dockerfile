@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11.0.3_7-jdk-openj9-0.14.3-bionic
+FROM adoptopenjdk:11.0.11_9-jdk-openj9-0.26.0-focal
 
 ARG VERSION=0.0.1-SNAPSHOT
 

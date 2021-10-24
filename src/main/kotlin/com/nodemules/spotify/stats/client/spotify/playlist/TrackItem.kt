@@ -9,7 +9,7 @@ import java.time.Instant
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class TrackItem(
     val addedAt: Instant,
-    val addedBy: User?,
-    val isLocal: Boolean,
+    val addedBy: User? = null,
+    val isLocal: Boolean = false,
     val track: Track?
 )

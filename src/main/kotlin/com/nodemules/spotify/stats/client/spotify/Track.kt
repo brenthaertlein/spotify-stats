@@ -7,18 +7,18 @@ import java.net.URI
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class Track(
     val album: Album,
-    val artists: List<Artist>,
+    val artists: List<Artist> = listOf(),
     val discNumber: Int,
-    val durationMs: Int,
-    val explicit: Boolean,
-    val externalIds: Map<String, String>,
-    val externalUrls: Map<String, URI>,
-    val href: String,
+    val durationMs: Long,
+    val explicit: Boolean = false,
+    val externalIds: Map<String, String> = mapOf(),
+    val externalUrls: Map<String, URI> = mapOf(),
     val id: String,
+    val href: URI = URI("https://api.spotify.com/v1/tracks/$id"),
     val name: String,
     val popularity: Int,
-    val previewUrl: URI?,
+    val previewUrl: URI? = null,
     val trackNumber: Int,
-    val type: String,
-    val uri: URI
+    val type: String = "track",
+    val uri: URI = URI("spotify:track:$id")
 )

@@ -6,16 +6,16 @@ import java.net.URI
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class Playlist(
-    val collaborative: Boolean,
-    val description: String,
-    val externalUrls: Map<String, URI>,
+    val collaborative: Boolean = false,
+    val description: String? = null,
+    val externalUrls: Map<String, URI> = mapOf(),
     val href: URI,
     val id: String,
-    val images: List<Image>,
+    val images: List<Image> = listOf(),
     val name: String,
-    val owner: User,
+    val owner: User? = null,
     val snapshotId: String,
-    val tracks: Tracks?
+    val tracks: Tracks? = null
 ) {
 
     data class Tracks(val href: URI, val total: Int)

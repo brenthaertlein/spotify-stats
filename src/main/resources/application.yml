@@ -14,3 +14,7 @@ spring:
 feign:
   circuitbreaker:
     enabled: true
+  client:
+    config:
+      spotify:
+        host: https://api.spotify.com
