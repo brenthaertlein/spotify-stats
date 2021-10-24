@@ -64,13 +64,7 @@ class TrackControllerIntegrationTests(
 
         spotifyClient.stubFor(
             WireMock.get(WireMock.urlPathEqualTo("/v1/browse/categories/punk/playlists"))
-                .willReturn(
-                    okForJson(
-                        categoriesPlaylistResponse(
-                            PLAYLIST_PUNK_SHIT
-                        )
-                    )
-                )
+                .willReturn(okForJson(categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT)))
         )
 
         spotifyClient.stubFor(
@@ -90,37 +84,12 @@ class TrackControllerIntegrationTests(
     fun `getRandomTrack - SUCCESS - category=punk`() {
         spotifyClient.stubFor(
             WireMock.get(WireMock.urlPathEqualTo("/v1/browse/categories/punk/playlists"))
-                .willReturn(
-                    okForJson(
-                        categoriesPlaylistResponse(
-                            Playlist(id = "punk_shit", name = "The most punk shit you'll ever hear")
-                        )
-                    )
-                )
+                .willReturn(okForJson(categoriesPlaylistResponse(PLAYLIST_PUNK_SHIT)))
         )
 
         spotifyClient.stubFor(
             WireMock.get(WireMock.urlPathEqualTo("/v1/playlists/punk_shit/tracks"))
-                .willReturn(
-                    okForJson(
-                        playlistResponse(
-                            Track(
-                                id = "white_riot",
-                                name = "White Riot",
-                                album = Album(
-                                    id = "the_clash_1977",
-                                    name = "The Clash",
-                                    artists = listOf(ARTIST_THE_CLASH)
-                                ),
-                                artists = listOf(ARTIST_THE_CLASH),
-                                durationMs = TimeUnit.SECONDS.toMillis(116),
-                                discNumber = 1,
-                                trackNumber = 4,
-                                popularity = 98
-                            )
-                        )
-                    )
-                )
+                .willReturn(okForJson(playlistResponse(TRACK_WHITE_RIOT)))
         )
 
         mockMvc.get("/track/recent/random") {
@@ -138,28 +107,7 @@ class TrackControllerIntegrationTests(
         spotifyClient.stubFor(
             WireMock.get(WireMock.urlPathEqualTo("/v1/artists/thursday/top-tracks"))
                 .withQueryParam("market", WireMock.equalTo("US"))
-                .willReturn(
-                    okForJson(
-                        TopTracksResponse(
-                            tracks = listOf(
-                                Track(
-                                    id = "understanding_in_a_car_crash",
-                                    name = "Understanding In A Car Crash",
-                                    album = Album(
-                                        id = "full_collapse",
-                                        name = "Full Collapse",
-                                        artists = listOf(ARTIST_THURSDAY)
-                                    ),
-                                    artists = listOf(ARTIST_THURSDAY),
-                                    discNumber = 1,
-                                    trackNumber = 2,
-                                    durationMs = 264546,
-                                    popularity = 57
-                                )
-                            )
-                        )
-                    )
-                )
+                .willReturn(okForJson(TopTracksResponse(tracks = listOf(TRACK_UNDERSTANDING_IN_A_CAR_CRASH))))
         )
 
         mockMvc.get("/track/recent/random") {
@@ -177,28 +125,7 @@ class TrackControllerIntegrationTests(
         spotifyClient.stubFor(
             WireMock.get(WireMock.urlPathEqualTo("/v1/artists/thursday/top-tracks"))
                 .withQueryParam("market", WireMock.equalTo("US"))
-                .willReturn(
-                    okForJson(
-                        TopTracksResponse(
-                            tracks = listOf(
-                                Track(
-                                    id = "understanding_in_a_car_crash",
-                                    name = "Understanding In A Car Crash",
-                                    album = Album(
-                                        id = "full_collapse",
-                                        name = "Full Collapse",
-                                        artists = listOf(ARTIST_THURSDAY)
-                                    ),
-                                    artists = listOf(ARTIST_THURSDAY),
-                                    discNumber = 1,
-                                    trackNumber = 2,
-                                    durationMs = 264546,
-                                    popularity = 57
-                                )
-                            )
-                        )
-                    )
-                )
+                .willReturn(okForJson(TopTracksResponse(tracks = listOf(TRACK_UNDERSTANDING_IN_A_CAR_CRASH))))
         )
 
         mockMvc.get("/track/recent/random") {
@@ -260,6 +187,12 @@ class TrackControllerIntegrationTests(
             artists = listOf(ARTIST_THE_CLASH)
         )
 
+        private val ALBUM_FULL_COLLAPSE = Album(
+            id = "full_collapse",
+            name = "Full Collapse",
+            artists = listOf(ARTIST_THURSDAY)
+        )
+
         private val TRACK_WHITE_RIOT = Track(
             id = "white_riot",
             name = "White Riot",
@@ -269,6 +202,17 @@ class TrackControllerIntegrationTests(
             discNumber = 1,
             trackNumber = 4,
             popularity = 98
+        )
+
+        private val TRACK_UNDERSTANDING_IN_A_CAR_CRASH = Track(
+            id = "understanding_in_a_car_crash",
+            name = "Understanding In A Car Crash",
+            album = ALBUM_FULL_COLLAPSE,
+            artists = listOf(ARTIST_THURSDAY),
+            discNumber = 1,
+            trackNumber = 2,
+            durationMs = 264546,
+            popularity = 57
         )
 
         private val CATEGORY_PUNK = Category(id = "punk", name = "Punk")
