@@ -207,7 +207,7 @@ class ArtistControllerIntegrationTests(
             .andDo { log() }
             .andExpect {
                 status { isOk() }
-                jsonPath("content[*].genre") { value(contains(oneOf("new jersey hardcore", "pop punk", "post-hardcore"))) }
+                jsonPath("content[*].genre") { value("emo") }
             }
     }
 
