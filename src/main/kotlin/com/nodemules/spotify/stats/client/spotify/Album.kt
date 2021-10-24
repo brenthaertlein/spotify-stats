@@ -6,13 +6,13 @@ import java.net.URI
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class Album(
-    val albumType: String,
-    val artists: List<Artist>,
-    val externalUrls: Map<String, URI>,
-    val href: URI,
     val id: String,
-    val images: List<Image>,
+    val albumType: String = "album",
+    val artists: List<Artist> = listOf(),
+    val externalUrls: Map<String, URI> = mapOf(),
+    val href: URI = URI("https://api.spotify.com/v1/albums/$id"),
+    val images: List<Image> = listOf(),
     val name: String,
-    val type: String,
-    val uri: URI
+    val type: String = "album",
+    val uri: URI = URI("spotify:album:$id")
 )

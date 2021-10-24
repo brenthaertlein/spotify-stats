@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(
     name = "spotifyArtistFeignClient",
-    url = "https://api.spotify.com/v1/artists",
+    url = "\${feign.client.config.spotify.host}/v1/artists",
     configuration = [SpotifyClientConfiguration::class],
     fallbackFactory = FeignClientFallbackFactory::class
 )

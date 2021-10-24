@@ -1,0 +1,31 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          spotify:
+            client-id: client_id
+            client-secret: client_secret
+            authorization-grant-type: client_credentials
+            client-authentication-method: post
+        provider:
+          spotify:
+            token-uri: http://localhost:12345/token
+  caching:
+    time-to-live: 0
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      spotify:
+        host: http://localhost:12345
+logging:
+  level:
+    com.nodemules.spotify.stats: DEBUG
+    com.github.tomakehurst.wiremock: DEBUG
+    org.springframework.test.web.servlet: DEBUG
+application:
+  cors:
+    allowed-origins:
+      - "http://localhost:3000"
