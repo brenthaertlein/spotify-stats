@@ -12,10 +12,13 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Run tests
-        run: ./gradlew clean test jacocoTestReport
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.2
+          arguments: clean test jacocoTestReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./build/reports/jacoco/test
