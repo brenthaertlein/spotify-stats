@@ -4,6 +4,7 @@ import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.Failure.GenericFailure
 import com.nodemules.spotify.stats.client.spotify.Track
 import com.nodemules.spotify.stats.client.spotify.tracks.CacheableSpotifyTracksClient
+import com.nodemules.spotify.stats.data.TrackExample
 import com.nodemules.spotify.stats.flatMapLeft
 import com.nodemules.spotify.stats.narrowFlatMap
 import com.nodemules.spotify.stats.sample
@@ -16,13 +17,34 @@ import org.springframework.stereotype.Component
 class SpotifyTrackService(
     private val spotifyBrowseService: SpotifyBrowseOperations,
     private val spotifyPlaylistService: SpotifyPlaylistOperations,
-    private val cacheableSpotifyTracksClient: CacheableSpotifyTracksClient
+    private val cacheableSpotifyTracksClient: CacheableSpotifyTracksClient,
+    private val artistService: ArtistService
 ) : SpotifyTrackOperations {
 
     private val wellKnownCategories = mutableSetOf("pop", "punk", "rock", "rnb")
 
-    override fun getRandomTrack(category: String?): Either<out Failure, Track> =
-        run { category?.let { getCompletelyRandomTrack(it.lowercase()) } ?: getCompletelyRandomTrack() }
+    override fun getRandomTrack(trackExample: TrackExample): Either<out Failure, Track> =
+        run {
+            val (artist, genres, category) = trackExample
+            artist?.let { artistService.findByName(artist).narrowFlatMap { artistService.getArtistTopTracks(it.id) }.map { it.sample() } }
+                ?: genres?.let {
+                    artistService.findByGenre(genres)
+                        .narrowFlatMap {
+                            logger.info { "Found ${it.size} artists for genres [$genres]" }
+                            it.sample().toEither { FAILURE_NOT_FOUND }
+                        }
+                        .narrowFlatMap { (id, name) ->
+                            logger.info { "Getting top tracks for artist $name" }
+                            artistService.getArtistTopTracks(id)
+                                .map {
+                                    logger.info { "Found ${it.size} tracks for artist [$name]" }
+                                    it.sample()
+                                }
+                        }
+                }
+                ?: category?.let { getCompletelyRandomTrack(it.lowercase()) }
+                ?: getCompletelyRandomTrack()
+        }
             .flatMapLeft {
                 logger.warn { "Unable to find a random track because [${it.message}], trying cache" }
                 cacheableSpotifyTracksClient.random()

@@ -2,13 +2,18 @@ package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.client.spotify.Artist
+import com.nodemules.spotify.stats.client.spotify.Track
 import com.nodemules.spotify.stats.client.spotify.artist.SpotifyArtistClient
+import com.nodemules.spotify.stats.client.spotify.artist.SpotifyArtistFeignClient
+import com.nodemules.spotify.stats.client.spotify.tracks.CacheableSpotifyTracksClient
 import com.nodemules.spotify.stats.data.ArtistExample
 import com.nodemules.spotify.stats.data.Genre
 import com.nodemules.spotify.stats.page
 import com.nodemules.spotify.stats.persistence.repository.ArtistRepository
 import io.vavr.control.Either
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
@@ -30,16 +35,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class ArtistService(
+    private val spotifyArtistFeignClient: SpotifyArtistFeignClient,
     private val spotifyArtistClient: SpotifyArtistClient,
+    private val cacheableSpotifyTracksClient: CacheableSpotifyTracksClient,
     private val artistRepository: ArtistRepository,
     private val mongoTemplate: MongoTemplate
 ) : ArtistOperations {
 
-    override fun getArtist(id: String): Either<out Failure, Artist> =
-        artistRepository.findById(id)
-            .map { Either.right<Failure, Artist>(it) }
-            .orElseGet { Either.left(Failure.GenericFailure(HttpStatus.NOT_FOUND, "")) }
-            .fold({ spotifyArtistClient.getArtist(id) }) { Either.right(it) }
+    @Cacheable("artist", unless = "#result.isLeft")
+    override fun getArtist(id: String): Either<out Failure, Artist> = spotifyArtistClient.getArtist(id)
 
     override fun getArtists(ids: Collection<String>): Either<out Failure, List<Artist>> = spotifyArtistClient.getArtists(ids)
 
@@ -140,5 +144,16 @@ class ArtistService(
             }
             .let { Either.right(it) }
 
+    @Cacheable("spotify.artist.top-tracks", unless = "#result.isLeft")
+    override fun getArtistTopTracks(artistId: String): Either<out Failure, List<Track>> =
+        spotifyArtistFeignClient.getTopTracks(artistId).map { (tracks) -> tracks.onEach { cacheableSpotifyTracksClient.put(it) } }
 
+    override fun findByName(name: String): Either<out Failure, Artist> =
+        artistRepository.findByName(name).toEither { Failure.GenericFailure(HttpStatus.NOT_FOUND, "Artist [$name] not found") }
+
+    override fun findByGenre(genres: List<String>): Either<out Failure, List<Artist>> =
+        Query()
+            .apply { addCriteria(Criteria().andOperator(genres.map { Criteria.where("genres").regex(".*$it.*", "i") })) }
+            .run { mongoTemplate.page(this, Artist::class.java, PageRequest.of(0, 50)) }
+            .let { Either.right(it.content) }
 }

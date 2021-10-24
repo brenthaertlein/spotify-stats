@@ -2,6 +2,7 @@ package com.nodemules.spotify.stats.service
 
 import com.nodemules.spotify.stats.Failure
 import com.nodemules.spotify.stats.client.spotify.Artist
+import com.nodemules.spotify.stats.client.spotify.Track
 import com.nodemules.spotify.stats.data.ArtistExample
 import com.nodemules.spotify.stats.data.Genre
 import io.vavr.control.Either
@@ -18,4 +19,10 @@ interface ArtistOperations {
     fun getGenres(): Either<out Failure, Collection<String>>
 
     fun getTopGenres(pageable: Pageable): Either<out Failure, Page<Genre>>
+
+    fun findByName(name: String): Either<out Failure, Artist>
+
+    fun findByGenre(genres: List<String>): Either<out Failure, List<Artist>>
+
+    fun getArtistTopTracks(artistId: String): Either<out Failure, List<Track>>
 }

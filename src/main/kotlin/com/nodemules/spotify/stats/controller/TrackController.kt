@@ -1,10 +1,11 @@
 package com.nodemules.spotify.stats.controller
 
+import com.nodemules.spotify.stats.data.TrackExample
 import com.nodemules.spotify.stats.service.SpotifyTrackOperations
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/track")
@@ -13,5 +14,5 @@ class TrackController(
 ) {
 
     @GetMapping("/recent/random")
-    fun getRandomTrack(@RequestParam(required = false) category: String? = null) = spotifyTrackService.getRandomTrack(category)
+    fun getRandomTrack(@Valid trackExample: TrackExample) = spotifyTrackService.getRandomTrack(trackExample)
 }

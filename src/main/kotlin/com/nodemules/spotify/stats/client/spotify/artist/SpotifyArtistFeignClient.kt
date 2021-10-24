@@ -29,6 +29,9 @@ interface SpotifyArtistFeignClient {
     @CollectionFormat(feign.CollectionFormat.CSV)
     fun getArtists(@RequestParam ids: Collection<String>): Either<SpotifyErrorResponse, ArtistsResponse>
 
+    @GetMapping("/{id}/top-tracks")
+    fun getTopTracks(@PathVariable id: String, @RequestParam market: String = "US"): Either<SpotifyErrorResponse, TopTracksResponse>
+
     @Component
     class FeignClientFallbackFactory : FallbackFactory<SpotifyArtistFeignClient> {
         override fun create(cause: Throwable) = object : SpotifyArtistFeignClient {
@@ -36,7 +39,10 @@ interface SpotifyArtistFeignClient {
                 cause.asFallback { "Unable to get spotify:artist:$id" }
 
             override fun getArtists(ids: Collection<String>): Either<SpotifyErrorResponse, ArtistsResponse> =
-                cause.asFallback { "Unable to get ${ids.map { "spotify:artist:$it" }}" }
+                cause.asFallback { "Unable to get ${ids.joinToString(", ") { "spotify:artist:$it" }}" }
+
+            override fun getTopTracks(id: String, market: String): Either<SpotifyErrorResponse, TopTracksResponse> =
+                cause.asFallback { "Unable to get top tracks for spotify:artist:$id in market=$market" }
         }
 
         companion object : FeignClientExtensions()
