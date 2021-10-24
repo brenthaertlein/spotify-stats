@@ -16,8 +16,8 @@ data class Artist(
     val href: URI = URI("https://api.spotify.com/v1/artists/$id"),
     val type: String = "artist",
     val uri: URI = URI("spotify:artist:$id"),
-    val genres: List<String>?,
-    val images: List<Image>?,
-    val followers: Followers?,
+    val genres: List<String>? = null,
+    val images: List<Image>? = null,
+    val followers: Followers? = null,
     val popularity: Int?
 )
