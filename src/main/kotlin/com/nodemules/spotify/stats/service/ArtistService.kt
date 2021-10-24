@@ -122,17 +122,21 @@ class ArtistService(
                         .andInclude("count")
                 )
                 add(
-                    pageable.sort.run {
-                        map {
-                            val sortDirection = getOrderFor(it.property)?.direction ?: Sort.Direction.DESC
-                            when (it.property) {
-                                "popularity" -> Sort.Order(sortDirection, "mostPopular.popularity")
-                                "followers" -> Sort.Order(sortDirection, "mostFollowed.followers.total")
-                                "count" -> Sort.Order(sortDirection, "count")
-                                else -> Sort.Order(Sort.Direction.DESC, "count")
+                    pageable.sort
+                        .takeUnless { it.isEmpty }
+                        ?.run {
+                            map {
+                                val sortDirection = getOrderFor(it.property)?.direction ?: Sort.Direction.DESC
+                                when (it.property) {
+                                    "popularity" -> Sort.Order(sortDirection, "mostPopular.popularity")
+                                    "followers" -> Sort.Order(sortDirection, "mostFollowed.followers.total")
+                                    "count" -> Sort.Order(sortDirection, "count")
+                                    else -> Sort.Order(Sort.Direction.DESC, "count")
+                                }
                             }
                         }
-                    }.let { sort(Sort.by(it.toList())) }
+                        ?.let { sort(Sort.by(it.toList())) }
+                        ?: sort(Sort.by(Sort.Order(Sort.Direction.DESC, "count")))
                 )
                 add(skip(pageable.offset))
                 add(limit(pageable.pageSize.toLong()))
