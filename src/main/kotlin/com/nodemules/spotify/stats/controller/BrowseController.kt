@@ -36,7 +36,7 @@ class BrowseController(
         private fun Collection<Category>.flatten(property: String): List<String> =
             when (property) {
                 "id" -> map { it.id }
-                "href" -> map { it.href }
+                "href" -> map { it.href.toString() }
                 "name" -> map { it.name }
                 else -> listOf()
             }
