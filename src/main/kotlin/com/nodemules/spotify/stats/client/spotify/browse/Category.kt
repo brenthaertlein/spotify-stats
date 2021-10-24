@@ -5,7 +5,7 @@ import java.net.URI
 
 data class Category(
     val id: String,
-    val href: URI = URI("spotify:category:$id"),
+    val href: URI = URI("https://api.spotify.com/v1/browse/categories/$id"),
     val icons: List<Image> = listOf(),
     val name: String
 )

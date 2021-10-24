@@ -3,27 +3,24 @@ package com.nodemules.spotify.stats
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.responseDefinition
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import com.github.tomakehurst.wiremock.standalone.MappingsLoader
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import com.nodemules.spotify.stats.client.spotify.PageableResponse
 import com.nodemules.spotify.stats.client.spotify.artist.TopTracksResponse
 import com.nodemules.spotify.stats.client.spotify.browse.CategoriesResponse
 import com.nodemules.spotify.stats.client.spotify.browse.CategoryPlaylistsResponse
 import com.nodemules.spotify.stats.client.spotify.playlist.TrackItem
+import mu.KLogging
 import org.springframework.http.MediaType
+import org.springframework.web.util.UriComponentsBuilder
 
 class SpotifyClient(
-    port: Int,
-    clientId: String = "client_id",
-    clientSecret: String = "client_secret"
-) : WireMockServer(
-    OAuth2WireMockConfiguration(clientId, clientSecret).port(port)
+    private val wireMockServer: WireMockServer
 ) {
 
     fun getCategories(response: () -> CategoriesResponse) {
@@ -60,34 +57,27 @@ class SpotifyClient(
         )
     }
 
+    private fun stubFor(mappingBuilder: MappingBuilder): StubMapping = mappingBuilder
+        .also {
+            it.build().apply {
+                request.apply {
+                    val uri = UriComponentsBuilder.fromPath(urlPath)
+                    logger.info { "Stubbing request $method ${uri.toUriString()}" }
+                }
+            }
+        }
+        .let { wireMockServer.stubFor(it) }
+        .also { wireMockServer.addStubMapping(it) }
+
     init {
-        start()
-    }
-
-    private class OAuth2WireMockConfiguration(
-        private val clientId: String,
-        private val clientSecret: String
-    ) : WireMockConfiguration() {
-        override fun mappingsLoader() = MappingsLoader {
-            it.addMapping(
-                OAUTH2_TOKEN_MAPPING
-                    .withRequestBody(equalTo("grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret"))
-                    .build()
-            )
-        }
-
-        companion object {
-            private val OAUTH2_TOKEN_MAPPING = post("/token")
-                .willReturn(
-                    responseDefinition()
-                        .withStatus(200)
-                        .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                        .withBody("""{"access_token":"$ACCESS_TOKEN","token_type":"Bearer","expires_in":3600}""")
-                )
+        wireMockServer.apply {
+            logger.info { "Resetting mappings for http://localhost:${port()}" }
+            resetToDefaultMappings()
+            if (!isRunning) start()
         }
     }
 
-    companion object {
+    companion object : KLogging() {
         private const val ACCESS_TOKEN = "FOO"
         private val objectMapper = jacksonObjectMapper().apply { registerModule(JavaTimeModule()) }
         private fun <T> okForJson(it: T): ResponseDefinitionBuilder =

@@ -19,6 +19,7 @@ feign:
   client:
     config:
       spotify:
+        connect-timeout: 5000
         host: http://localhost:12345
 logging:
   level:
